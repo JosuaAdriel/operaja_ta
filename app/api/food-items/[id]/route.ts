@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
 // GET single food item by ID
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
     const { rows } = await pool.query(`
       SELECT food_items.*, 
@@ -18,7 +17,7 @@ export async function GET(
       FROM food_items
       JOIN users ON food_items.provider_id = users.id
       WHERE food_items.id = $1
-    `, [params.id]);
+    `, [id]);
 
     if (!(rows as any[]).length) {
       return NextResponse.json(
@@ -41,10 +40,9 @@ export async function GET(
 }
 
 // PUT update food item
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
     const body = await request.json();
     
@@ -69,7 +67,7 @@ export async function PUT(
       [
         name, price, rating, distance, availability, image_url,
         location_address, location_details, description_title, description_content,
-        params.id
+        id
       ]
     );
 
@@ -94,14 +92,13 @@ export async function PUT(
 }
 
 // DELETE food item
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
     const result = await pool.query(
       'DELETE FROM food_items WHERE id = $1',
-      [params.id]
+      [id]
     );
 
     if (result.rowCount === 0) {

@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
-    const orderId = params.id;
-
-    // GET order details
     const { rows } = await pool.query(`
       SELECT orders.*, 
         food_items.name AS food_name,
@@ -31,15 +27,13 @@ export async function GET(
       JOIN users ON food_items.provider_id = users.id
       JOIN users customer ON orders.user_id = customer.id
       WHERE orders.id = $1
-    `, [orderId]);
-
+    `, [id]);
     if (!(rows as any[]).length) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
     }
-
     return NextResponse.json({
       data: (rows as any[])[0],
       status: 'success'
@@ -53,17 +47,14 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
-    const orderId = params.id;
-
-    // POST approve order
+    // 1. Get the order details
     const { rows: orders } = await pool.query(
       'SELECT * FROM orders WHERE id = $1 AND status = $2',
-      [orderId, 'approved']
+      [id, 'approved']
     );
     if ((orders as any[]).length === 0) {
       return NextResponse.json(
@@ -74,7 +65,7 @@ export async function POST(
     const order = (orders as any[])[0];
     await pool.query(
       'UPDATE orders SET status = $1 WHERE id = $2',
-      ['confirmed', orderId]
+      ['confirmed', id]
     );
     await pool.query(
       'UPDATE food_items SET status = $1 WHERE id = $2',
@@ -93,7 +84,6 @@ export async function POST(
         [savingsAmount, wasteSaved, order.user_id]
       );
     }
-
     return NextResponse.json({
       message: 'Pembayaran berhasil dikonfirmasi!',
       status: 'success'
