@@ -20,13 +20,13 @@ export async function GET(req: Request) {
     const userId = decoded.userId;
     
     // Cek status donatur bisnis
-    const [userRows] = await db.execute('SELECT is_business_donor FROM users WHERE id = ?', [userId]);
+    const { rows: userRows } = await db.query('SELECT is_business_donor FROM users WHERE id = $1', [userId]);
     const isBusinessDonor = (userRows as any[])[0]?.is_business_donor || false;
     
     // Jika sudah donatur bisnis, ambil info bisnis
     let infoBisnis = null;
     if (isBusinessDonor) {
-      const [businessRows] = await db.execute('SELECT * FROM info_bisnis WHERE user_id = ?', [userId]);
+      const { rows: businessRows } = await db.query('SELECT * FROM info_bisnis WHERE user_id = $1', [userId]);
       if ((businessRows as any[]).length > 0) {
         infoBisnis = (businessRows as any[])[0];
       }

@@ -7,9 +7,9 @@ export async function POST(request: Request) {
     const { food_item_id, user_id, pickup_time, pickup_location, order_amount } = body;
 
     // 1. Ambil data makanan
-    const [foods] = await pool.execute(
-      'SELECT * FROM food_items WHERE id = ? AND status = "available"',
-      [food_item_id]
+    const { rows: foods } = await pool.query(
+      'SELECT * FROM food_items WHERE id = $1 AND status = $2',
+      [food_item_id, 'available']
     );
     if ((foods as any[]).length === 0) {
       return NextResponse.json({ error: 'Makanan tidak tersedia.' }, { status: 400 });
@@ -42,33 +42,33 @@ export async function POST(request: Request) {
     // Tambahan: Cek tipe food item
     if (food.type === 'jualan') {
       // Untuk tipe jualan, order harus langsung confirmed, tidak boleh pending/negosiasi
-      const [existingOrder] = await pool.execute(
-        'SELECT * FROM orders WHERE food_item_id = ? AND status IN ("pending", "confirmed", "approved")',
-        [food_item_id]
+      const { rows: existingOrder } = await pool.query(
+        'SELECT * FROM orders WHERE food_item_id = $1 AND status IN ($2, $3, $4)',
+        [food_item_id, 'pending', 'confirmed', 'approved']
       );
       if ((existingOrder as any[]).length > 0) {
         return NextResponse.json({ error: 'Makanan sudah dipesan atau sedang diproses.' }, { status: 400 });
       }
       // Insert order langsung confirmed
-      const [result] = await pool.execute(
-        'INSERT INTO orders (food_item_id, user_id, order_amount, status) VALUES (?, ?, ?, ?)',
+      const result = await pool.query(
+        'INSERT INTO orders (food_item_id, user_id, order_amount, status) VALUES ($1, $2, $3, $4) RETURNING id',
         [food_item_id, user_id, food.price_patungan, 'confirmed']
       );
-      await pool.execute(
-        'UPDATE food_items SET status = "ordered" WHERE id = ?',
-        [food_item_id]
+      await pool.query(
+        'UPDATE food_items SET status = $1 WHERE id = $2',
+        ['ordered', food_item_id]
       );
       // Update total penghematan dan sampah yang diselamatkan untuk user
       const savingsAmount = parseFloat(food.price_patungan) * 2;
       const wasteSaved = food.weight || 0;
-      await pool.execute(
-        'UPDATE users SET total_savings = total_savings + ?, total_waste_saved = total_waste_saved + ? WHERE id = ?',
+      await pool.query(
+        'UPDATE users SET total_savings = total_savings + $1, total_waste_saved = total_waste_saved + $2 WHERE id = $3',
         [savingsAmount, wasteSaved, user_id]
       );
       return NextResponse.json({
         message: 'Pesanan jualan berhasil dibuat!',
         data: {
-          id: (result as any).insertId,
+          id: result.rows[0].id,
           food_item_id,
           user_id,
           order_amount: food.price_patungan,
@@ -81,24 +81,24 @@ export async function POST(request: Request) {
     }
 
     // 5. Insert ke orders
-    const [result] = await pool.execute(
-      'INSERT INTO orders (food_item_id, user_id, order_amount, status) VALUES (?, ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO orders (food_item_id, user_id, order_amount, status) VALUES ($1, $2, $3, $4) RETURNING id',
       [food_item_id, user_id, order_amount, orderStatus]
     );
 
     // 6. Update status makanan jika order confirmed
     if (orderStatus === 'confirmed') {
-      await pool.execute(
-        'UPDATE food_items SET status = "ordered" WHERE id = ?',
-        [food_item_id]
+      await pool.query(
+        'UPDATE food_items SET status = $1 WHERE id = $2',
+        ['ordered', food_item_id]
       );
 
       // 7. Update total penghematan dan sampah yang diselamatkan untuk user
       const savingsAmount = parseFloat(order_amount) * 2; // price_patungan * 2
       const wasteSaved = food.weight || 0; // weight makanan
 
-      await pool.execute(
-        'UPDATE users SET total_savings = total_savings + ?, total_waste_saved = total_waste_saved + ? WHERE id = ?',
+      await pool.query(
+        'UPDATE users SET total_savings = total_savings + $1, total_waste_saved = total_waste_saved + $2 WHERE id = $3',
         [savingsAmount, wasteSaved, user_id]
       );
     }
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: message,
       data: {
-        id: (result as any).insertId,
+        id: result.rows[0].id,
         food_item_id,
         user_id,
         order_amount,

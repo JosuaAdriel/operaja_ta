@@ -4,7 +4,7 @@ import pool from '@/lib/db';
 // GET all food items
 export async function GET() {
   try {
-    const [rows] = await pool.execute(`
+    const { rows } = await pool.query(`
       SELECT food_items.*, 
         users.name AS provider_name, 
         users.avatar AS provider_avatar, 
@@ -47,10 +47,10 @@ export async function POST(request: Request) {
       type = 'donasi' // default to donasi if not specified
     } = body;
 
-    const [result] = await pool.execute(
+    const result = await pool.query(
       `INSERT INTO food_items (
         name, distance, availability, image_url, location_address, location_details, provider_id, description_title, description_content, price_patungan, weight, type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
       [
         name,
         distance,
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: 'Food item created successfully',
-      id: (result as any).insertId,
+      id: result.rows[0].id,
       status: 'success'
     });
   } catch (error) {

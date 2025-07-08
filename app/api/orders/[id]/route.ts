@@ -8,8 +8,8 @@ export async function GET(
   try {
     const orderId = params.id;
 
-    // Get order details with food and user information
-    const [rows] = await pool.execute(`
+    // GET order details
+    const { rows } = await pool.query(`
       SELECT orders.*, 
         food_items.name AS food_name,
         food_items.image_url AS food_image,
@@ -30,7 +30,7 @@ export async function GET(
       JOIN food_items ON orders.food_item_id = food_items.id
       JOIN users ON food_items.provider_id = users.id
       JOIN users customer ON orders.user_id = customer.id
-      WHERE orders.id = ?
+      WHERE orders.id = $1
     `, [orderId]);
 
     if (!(rows as any[]).length) {
@@ -60,48 +60,36 @@ export async function POST(
   try {
     const orderId = params.id;
 
-    // 1. Get the order details
-    const [orders] = await pool.execute(
-      'SELECT * FROM orders WHERE id = ? AND status = "approved"',
-      [orderId]
+    // POST approve order
+    const { rows: orders } = await pool.query(
+      'SELECT * FROM orders WHERE id = $1 AND status = $2',
+      [orderId, 'approved']
     );
-
     if ((orders as any[]).length === 0) {
       return NextResponse.json(
         { error: 'Order not found or not approved' },
         { status: 404 }
       );
     }
-
     const order = (orders as any[])[0];
-
-    // 2. Update order status to confirmed
-    await pool.execute(
-      'UPDATE orders SET status = "confirmed" WHERE id = ?',
-      [orderId]
+    await pool.query(
+      'UPDATE orders SET status = $1 WHERE id = $2',
+      ['confirmed', orderId]
     );
-
-    // 3. Update food status to ordered
-    await pool.execute(
-      'UPDATE food_items SET status = "ordered" WHERE id = ?',
+    await pool.query(
+      'UPDATE food_items SET status = $1 WHERE id = $2',
+      ['ordered', order.food_item_id]
+    );
+    const { rows: foods } = await pool.query(
+      'SELECT weight FROM food_items WHERE id = $1',
       [order.food_item_id]
     );
-
-    // 4. Get food details to calculate savings and waste
-    const [foods] = await pool.execute(
-      'SELECT weight FROM food_items WHERE id = ?',
-      [order.food_item_id]
-    );
-    
     if ((foods as any[]).length > 0) {
       const food = (foods as any[])[0];
-      
-      // 5. Update total penghematan dan sampah yang diselamatkan untuk user
-      const savingsAmount = parseFloat(order.order_amount) * 2; // price_patungan * 2
-      const wasteSaved = food.weight || 0; // weight makanan
-
-      await pool.execute(
-        'UPDATE users SET total_savings = total_savings + ?, total_waste_saved = total_waste_saved + ? WHERE id = ?',
+      const savingsAmount = parseFloat(order.order_amount) * 2;
+      const wasteSaved = food.weight || 0;
+      await pool.query(
+        'UPDATE users SET total_savings = total_savings + $1, total_waste_saved = total_waste_saved + $2 WHERE id = $3',
         [savingsAmount, wasteSaved, order.user_id]
       );
     }

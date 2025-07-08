@@ -24,8 +24,8 @@ export async function GET(request: Request) {
     }
 
     // Get user data
-    const [users] = await pool.execute(
-      'SELECT id, email, name, avatar, full_name, address, phone_number, bank_name, account_number, rating, reviews_count, total_savings, total_waste_saved, is_verified FROM users WHERE id = ?',
+    const { rows: users } = await pool.query(
+      'SELECT id, email, name, avatar, full_name, address, phone_number, bank_name, account_number, rating, reviews_count, total_savings, total_waste_saved, is_verified FROM users WHERE id = $1',
       [decoded.userId]
     );
 

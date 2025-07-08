@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     }
 
     // Get all orders for this user with food details
-    const [rows] = await pool.execute(`
-      SELECT orders.*, 
+    const { rows } = await pool.query(
+      `SELECT orders.*, 
         food_items.name AS food_name,
         food_items.image_url AS food_image,
         food_items.price_patungan,
@@ -23,9 +23,10 @@ export async function GET(request: Request) {
       FROM orders
       JOIN food_items ON orders.food_item_id = food_items.id
       JOIN users ON food_items.provider_id = users.id
-      WHERE orders.user_id = ?
-      ORDER BY orders.created_at DESC
-    `, [user_id]);
+      WHERE orders.user_id = $1
+      ORDER BY orders.created_at DESC`,
+      [user_id]
+    );
 
     return NextResponse.json({
       data: rows,

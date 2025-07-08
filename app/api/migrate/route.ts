@@ -4,7 +4,7 @@ import pool from '@/lib/db';
 export async function POST() {
   try {
     // Add order_amount column to orders table if it doesn't exist
-    await pool.execute(`
+    await pool.query(`
       ALTER TABLE orders 
       ADD COLUMN IF NOT EXISTS order_amount DECIMAL(10,2) DEFAULT NULL
     `);

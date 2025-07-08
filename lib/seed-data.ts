@@ -63,7 +63,7 @@ export async function seedFoodItems() {
     ];
 
     // Check if data already exists to avoid duplicates
-    const [existingRows] = await pool.execute('SELECT COUNT(*) as count FROM food_items');
+    const { rows: existingRows } = await pool.query('SELECT COUNT(*) as count FROM food_items');
     const count = (existingRows as any[])[0].count;
     
     if (count > 0) {
@@ -72,13 +72,13 @@ export async function seedFoodItems() {
     }
 
     for (const item of sampleFoodItems) {
-      await pool.execute(
+      await pool.query(
         `INSERT INTO food_items (
           name, price, rating, distance, availability, image_url,
           location_address, location_details, provider_name, provider_rating,
           provider_reviews, provider_avatar, description_title, description_content,
           description_recommendations, description_sides, description_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
         [
           item.name, item.price, item.rating, item.distance, item.availability, item.image_url,
           item.location_address, item.location_details, item.provider_name, item.provider_rating,

@@ -9,9 +9,9 @@ export async function PUT(
     const orderId = params.id;
 
     // 1. Get the order details
-    const [orders] = await pool.execute(
-      'SELECT * FROM orders WHERE id = ? AND status = "pending"',
-      [orderId]
+    const { rows: orders } = await pool.query(
+      'SELECT * FROM orders WHERE id = $1 AND status = $2',
+      [orderId, 'pending']
     );
 
     if ((orders as any[]).length === 0) {
@@ -22,9 +22,9 @@ export async function PUT(
     }
 
     // 2. Update order status to cancelled
-    await pool.execute(
-      'UPDATE orders SET status = "cancelled" WHERE id = ?',
-      [orderId]
+    await pool.query(
+      'UPDATE orders SET status = $1 WHERE id = $2',
+      ['cancelled', orderId]
     );
 
     return NextResponse.json({

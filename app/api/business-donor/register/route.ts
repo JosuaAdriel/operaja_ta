@@ -21,14 +21,14 @@ export async function POST(req: Request) {
     const data = await req.json();
     
     // Cek apakah user sudah punya info bisnis
-    const [existing] = await db.execute('SELECT id FROM info_bisnis WHERE user_id = ?', [userId]);
+    const { rows: existing } = await db.query('SELECT id FROM info_bisnis WHERE user_id = $1', [userId]);
     if ((existing as any[]).length > 0) {
       return NextResponse.json({ message: 'User already registered as business donor' }, { status: 400 });
     }
     
     // Insert ke info_bisnis
-    await db.execute(
-      `INSERT INTO info_bisnis (user_id, nama, kategori, alamat, rata_rata_pendapatan, nama_narahubung, nomor_telepon, email_narahubung, nib, sertifikat_halal, pirt, npwp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
+    await db.query(
+      `INSERT INTO info_bisnis (user_id, nama, kategori, alamat, rata_rata_pendapatan, nama_narahubung, nomor_telepon, email_narahubung, nib, sertifikat_halal, pirt, npwp, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'approved')`,
       [
         userId,
         data.nama,
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     );
     
     // Update status user
-    await db.execute('UPDATE users SET is_business_donor = 1 WHERE id = ?', [userId]);
+    await db.query('UPDATE users SET is_business_donor = 1 WHERE id = $1', [userId]);
     
     return NextResponse.json({ message: 'Business donor registered successfully', status: 'success' });
   } catch (error) {

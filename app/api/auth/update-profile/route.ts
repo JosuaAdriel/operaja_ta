@@ -37,19 +37,19 @@ export async function PUT(request: Request) {
     } = body;
 
     // Update user profile
-    const [result] = await pool.execute(
+    const result = await pool.query(
       `UPDATE users SET 
-        name = ?, 
-        full_name = ?, 
-        address = ?, 
-        phone_number = ?, 
-        id_number = ?, 
-        ktp_photo = ?, 
-        bank_name = ?, 
-        account_number = ?,
-        avatar = ?,
+        name = $1, 
+        full_name = $2, 
+        address = $3, 
+        phone_number = $4, 
+        id_number = $5, 
+        ktp_photo = $6, 
+        bank_name = $7, 
+        account_number = $8,
+        avatar = $9,
         is_verified = TRUE
-      WHERE id = ?`,
+      WHERE id = $10`,
       [
         name,
         fullName,
@@ -64,7 +64,7 @@ export async function PUT(request: Request) {
       ]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }

@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const [rows] = await pool.execute(`
+    const { rows } = await pool.query(`
       SELECT food_items.*, 
         users.name AS provider_name, 
         users.avatar AS provider_avatar, 
@@ -17,7 +17,7 @@ export async function GET(
         users.account_number AS provider_account_number
       FROM food_items
       JOIN users ON food_items.provider_id = users.id
-      WHERE food_items.id = ?
+      WHERE food_items.id = $1
     `, [params.id]);
 
     if (!(rows as any[]).length) {
@@ -61,11 +61,11 @@ export async function PUT(
       description_content
     } = body;
 
-    const [result] = await pool.execute(
+    const result = await pool.query(
       `UPDATE food_items SET 
-        name = ?, price = ?, rating = ?, distance = ?, availability = ?, image_url = ?,
-        location_address = ?, location_details = ?, description_title = ?, description_content = ?
-      WHERE id = ?`,
+        name = $1, price = $2, rating = $3, distance = $4, availability = $5, image_url = $6,
+        location_address = $7, location_details = $8, description_title = $9, description_content = $10
+      WHERE id = $11`,
       [
         name, price, rating, distance, availability, image_url,
         location_address, location_details, description_title, description_content,
@@ -73,7 +73,7 @@ export async function PUT(
       ]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'Food item not found' },
         { status: 404 }
@@ -99,12 +99,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const [result] = await pool.execute(
-      'DELETE FROM food_items WHERE id = ?',
+    const result = await pool.query(
+      'DELETE FROM food_items WHERE id = $1',
       [params.id]
     );
 
-    if ((result as any).affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: 'Food item not found' },
         { status: 404 }

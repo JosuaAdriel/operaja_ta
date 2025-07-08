@@ -16,8 +16,8 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const [existingUsers] = await pool.execute(
-      'SELECT id FROM users WHERE email = ?',
+    const { rows: existingUsers } = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
       [email]
     );
 
@@ -32,12 +32,11 @@ export async function POST(request: Request) {
     const hashedPassword = await hashPassword(password);
 
     // Create user
-    const [result] = await pool.execute(
-      'INSERT INTO users (email, password_hash) VALUES (?, ?)',
+    const result = await pool.query(
+      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id',
       [email, hashedPassword]
     );
-
-    const userId = (result as any).insertId;
+    const userId = result.rows[0].id;
 
         // Generate auth token
         const token = generateToken(userId, email);
