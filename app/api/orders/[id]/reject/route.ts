@@ -1,0 +1,41 @@
+import { NextResponse } from 'next/server';
+import pool from '@/lib/db';
+
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const orderId = params.id;
+
+    // 1. Get the order details
+    const [orders] = await pool.execute(
+      'SELECT * FROM orders WHERE id = ? AND status = "pending"',
+      [orderId]
+    );
+
+    if ((orders as any[]).length === 0) {
+      return NextResponse.json(
+        { error: 'Order not found or not pending' },
+        { status: 404 }
+      );
+    }
+
+    // 2. Update order status to cancelled
+    await pool.execute(
+      'UPDATE orders SET status = "cancelled" WHERE id = ?',
+      [orderId]
+    );
+
+    return NextResponse.json({
+      message: 'Negosiasi berhasil ditolak!',
+      status: 'success'
+    });
+  } catch (error) {
+    console.error('Error rejecting negotiation:', error);
+    return NextResponse.json(
+      { error: 'Failed to reject negotiation' },
+      { status: 500 }
+    );
+  }
+} 

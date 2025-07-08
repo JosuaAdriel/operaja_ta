@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "user_id": 5,
+    "nama": "Bisnis Baur",
+    "kategori": "makanna",
+    "alamat": "jalan rumah",
+    "rata_rata_pendapatan": "10000000",
+    "nama_narahubung": "Josua",
+    "nomor_telepon": "123232",
+    "email_narahubung": "josu1a.sinabutar@gmail.com",
+    "nib": "12",
+    "sertifikat_halal": "212",
+    "pirt": "121",
+    "npwp": "2121",
+    "status": "approved",
+    "created_at": "2025-07-06T12:42:44.000Z",
+    "updated_at": "2025-07-06T12:42:44.000Z"
+  }
+]
