@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const dynamic = 'force-dynamic';
 
@@ -19,13 +22,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Save file to /public with unique name
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = path.extname(file.name);
+    // Upload file to Supabase Storage
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
     const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-    const filePath = path.join(process.cwd(), 'public', fileName);
-    await fs.writeFile(filePath, buffer);
-    const fileUrl = `/${fileName}`;
+    const { data, error } = await supabase.storage
+      .from('uploads') // pastikan ada bucket 'uploads' di Supabase Storage
+      .upload(fileName, buffer, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: true,
+      });
+    if (error) {
+      return NextResponse.json({ error: 'Failed to upload image', details: error.message }, { status: 500 });
+    }
+    const fileUrl = `${supabaseUrl}/storage/v1/object/public/uploads/${fileName}`;
     return NextResponse.json({ url: fileUrl, status: 'success' });
   } catch (err: any) {
     console.error('Upload error:', err);

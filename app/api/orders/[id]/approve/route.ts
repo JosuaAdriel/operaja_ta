@@ -1,30 +1,25 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request) {
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
   try {
-    const orderId = params.id;
-
     // 1. Get the order details
     const { rows: orders } = await pool.query(
       'SELECT * FROM orders WHERE id = $1 AND status = $2',
-      [orderId, 'pending']
+      [id, 'pending']
     );
-
     if ((orders as any[]).length === 0) {
       return NextResponse.json(
         { error: 'Order not found or not pending' },
         { status: 404 }
       );
     }
-
     // Update status order menjadi 'approved'
     await pool.query(
       'UPDATE orders SET status = $1 WHERE id = $2',
-      ['approved', orderId]
+      ['approved', id]
     );
     return NextResponse.json({
       message: 'Negosiasi berhasil disetujui!',
