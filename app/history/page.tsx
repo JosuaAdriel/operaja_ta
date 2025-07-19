@@ -94,7 +94,7 @@ export default function HistoryPage() {
                   <div>
                     <h1 className="text-lg font-bold text-[#01563A]">{user.name}</h1>
                     <p className="text-sm text-[#01563A] opacity-80">
-                      {isBusinessDonor ? "Donatur Bisnis" : "Donatur Umum"}
+                      {isBusinessDonor ? "Donatur Layanan Makanan" : "Donatur Rumah Tangga"}
                     </p>
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export default function HistoryPage() {
                   className="w-full bg-[#01563A] text-[#FDF6D2] font-bold" 
                   onClick={() => router.push('/business-register')}
                 >
-                  Daftar Donatur Berjualan
+                  Daftar Donatur Layanan Makanan
                 </Button>
               </div>
             )}
@@ -185,7 +185,7 @@ export default function HistoryPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm opacity-90">Ajuan Donasi</p>
+                      <p className="text-sm opacity-90">{item.type === 'jualan' ? 'Harga' : 'Ajuan Donasi'}</p>
                       <p className="font-bold text-lg">{item.price_patungan ? `Rp${item.price_patungan}` : '-'}</p>
                     </div>
                     <Avatar className="w-8 h-8 border-2 border-white">
@@ -239,7 +239,7 @@ export default function HistoryPage() {
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm opacity-90">Ajuan Donasi</p>
+                    <p className="text-sm opacity-90">{item.type === 'jualan' ? 'Harga' : 'Ajuan Donasi'}</p>
                     <p className="font-bold text-lg">Rp{item.order_amount?.toLocaleString() || 0}</p>
                     <p className="text-xs opacity-90">Min: Rp{item.price_patungan?.toLocaleString() || 0}</p>
                   </div>

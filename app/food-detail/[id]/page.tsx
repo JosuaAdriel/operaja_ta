@@ -217,7 +217,7 @@ export default function FoodDetailPage() {
             
             {user && food.provider_id === user.id && negotiations.length === 0 && (
               <div className="text-center text-[#01563A] text-sm py-4">
-                Belum ada ajuan donasi untuk makanan ini.
+                Belum ada Penawaran untuk makanan ini.
               </div>
             )}
           </div>

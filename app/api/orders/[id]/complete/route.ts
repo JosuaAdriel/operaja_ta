@@ -3,10 +3,11 @@ import pool from '@/lib/db';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id } = await params;
+    const orderId = id;
 
     // 1. Get the order details
     const [orders] = await pool.execute(

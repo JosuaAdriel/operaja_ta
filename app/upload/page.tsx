@@ -98,7 +98,7 @@ export default function UploadPage() {
       provider_id: user.id,
       description_title: formData.descriptionTitle ?? "",
       description_content: formData.description ?? "",
-      price_donation: formData.contribution ?? "",
+      price_patungan: formData.contribution ?? "",
       weight: formData.weight ? parseInt(formData.weight) : null,
       type: shareType // tambahkan type untuk membedakan donasi/jualan
     }
@@ -161,7 +161,7 @@ export default function UploadPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-[#01563A] mb-4">Daftar Donatur Layanan Makanan Dulu</h2>
                 <p className="text-[#01563A] opacity-80 mb-8 max-w-sm">
-                  Kamu harus mendaftar sebagai donatur berjualan sebelum bisa upload makanan jualan.
+                  Kamu harus mendaftar sebagai donatur layanan makanan sebelum bisa upload makanan jualan.
                 </p>
                 <div className="space-y-3 w-full">
                   <Button 

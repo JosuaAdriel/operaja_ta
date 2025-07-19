@@ -3,10 +3,11 @@ import pool from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id } = await params;
+    const orderId = id;
 
     // Get order details with food and user information
     const [rows] = await pool.execute(`
@@ -55,10 +56,11 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id;
+    const { id } = await params;
+    const orderId = id;
 
     // 1. Get the order details
     const [orders] = await pool.execute(
